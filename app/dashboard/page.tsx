@@ -6,7 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { PromptForm } from '@/components/ai/PromptForm'
-import { FileUpload } from '@/components/ai/FileUpload'
+import { JsonUpload } from '@/components/ai/JsonUpload'
 import { UsageCounter } from '@/components/ai/UsageCounter'
 import { QuizList } from '@/components/quiz/QuizList'
 import { Sparkles, Upload, Plus, Download } from 'lucide-react'
@@ -83,12 +83,12 @@ export default function Dashboard() {
             <DialogTrigger asChild>
               <Button size="lg">
                 <Plus className="mr-2 h-4 w-4" />
-                クイズ生成
+                クイズ作成
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>新しいクイズを生成</DialogTitle>
+                <DialogTitle>新しいクイズを作成</DialogTitle>
                 <DialogDescription>
                   クイズの作成方法を選択してください
                 </DialogDescription>
@@ -98,11 +98,11 @@ export default function Dashboard() {
                 <TabsList className="grid w-full grid-cols-2">
                   <TabsTrigger value="prompt">
                     <Sparkles className="mr-2 h-4 w-4" />
-                    プロンプトから
+                    AIで生成
                   </TabsTrigger>
-                  <TabsTrigger value="pdf">
+                  <TabsTrigger value="json">
                     <Upload className="mr-2 h-4 w-4" />
-                    PDFから
+                    JSONから読み込み
                   </TabsTrigger>
                 </TabsList>
                 
@@ -110,8 +110,8 @@ export default function Dashboard() {
                   <PromptForm onGenerate={handleQuizGenerated} />
                 </TabsContent>
                 
-                <TabsContent value="pdf">
-                  <FileUpload onGenerate={handleQuizGenerated} />
+                <TabsContent value="json">
+                  <JsonUpload onGenerate={handleQuizGenerated} />
                 </TabsContent>
               </Tabs>
             </DialogContent>
@@ -143,7 +143,7 @@ export default function Dashboard() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground">
-                {generatedQuiz.questions.length}問の問題を生成しました。
+                {generatedQuiz.questions.length}問の問題を読み込みました。
                 このクイズを保存して開始するか、JSONファイルとしてエクスポートできます。
               </p>
             </CardContent>
