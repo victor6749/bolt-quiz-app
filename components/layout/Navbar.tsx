@@ -66,8 +66,8 @@ export function Navbar() {
           <NavLinks />
         </div>
 
-        {/* Right side controls */}
-        <div className="flex items-center space-x-2">
+        {/* Right side controls - 端に寄せるためにml-autoを追加 */}
+        <div className="flex items-center space-x-3 ml-auto md:ml-0">
           <ThemeToggle />
           <div className="hidden md:block">
             <LoginButton />
@@ -77,7 +77,7 @@ export function Navbar() {
           <div className="md:hidden">
             <Sheet open={isOpen} onOpenChange={setIsOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="sm">
+                <Button variant="ghost" size="sm" className="p-2">
                   <Menu className="h-5 w-5" />
                 </Button>
               </SheetTrigger>

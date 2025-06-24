@@ -12,17 +12,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { LogOut, Settings, User } from 'lucide-react'
+import Link from 'next/link'
 
 export function LoginButton() {
   const { data: session, status } = useSession()
 
   if (status === 'loading') {
-    return <Button variant="ghost" disabled>読み込み中...</Button>
+    return <Button variant="ghost" disabled size="sm">読み込み中...</Button>
   }
 
   if (!session) {
     return (
-      <Button onClick={() => signIn('google')} variant="default">
+      <Button onClick={() => signIn('google')} variant="default" size="sm">
         Googleでサインイン
       </Button>
     )
@@ -31,10 +32,10 @@ export function LoginButton() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+        <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-accent">
           <Avatar className="h-8 w-8">
             <AvatarImage src={session.user?.image || ''} alt={session.user?.name || ''} />
-            <AvatarFallback>
+            <AvatarFallback className="text-sm">
               {session.user?.name?.charAt(0).toUpperCase() || 'U'}
             </AvatarFallback>
           </Avatar>
@@ -50,16 +51,20 @@ export function LoginButton() {
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          <User className="mr-2 h-4 w-4" />
-          <span>プロフィール</span>
+        <DropdownMenuItem asChild>
+          <Link href="/profile" className="cursor-pointer">
+            <User className="mr-2 h-4 w-4" />
+            <span>プロフィール</span>
+          </Link>
         </DropdownMenuItem>
-        <DropdownMenuItem>
-          <Settings className="mr-2 h-4 w-4" />
-          <span>設定</span>
+        <DropdownMenuItem asChild>
+          <Link href="/settings" className="cursor-pointer">
+            <Settings className="mr-2 h-4 w-4" />
+            <span>設定</span>
+          </Link>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={() => signOut()}>
+        <DropdownMenuItem onClick={() => signOut()} className="cursor-pointer">
           <LogOut className="mr-2 h-4 w-4" />
           <span>ログアウト</span>
         </DropdownMenuItem>
