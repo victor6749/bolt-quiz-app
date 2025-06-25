@@ -5,7 +5,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Play, Trash2, Calendar, Users } from 'lucide-react'
+import { Play, Trash2, Calendar, Users, Download } from 'lucide-react'
 import { toast } from 'sonner'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
@@ -14,6 +14,7 @@ interface Quiz {
   id: string
   title: string
   description: string
+  questions: string
   createdAt: string
   _count: {
     attempts: number
@@ -60,6 +61,32 @@ export function QuizList() {
     } catch (error) {
       console.error('Error deleting quiz:', error)
       toast.error('クイズの削除に失敗しました')
+    }
+  }
+
+  const handleExportQuiz = (quiz: Quiz) => {
+    try {
+      const questionsData = JSON.parse(quiz.questions)
+      const exportData = {
+        title: quiz.title,
+        description: quiz.description,
+        questions: questionsData
+      }
+
+      const dataStr = JSON.stringify(exportData, null, 2)
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+      
+      const exportFileDefaultName = `${quiz.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.json`
+      
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      linkElement.click()
+      
+      toast.success('クイズが正常にエクスポートされました！')
+    } catch (error) {
+      console.error('Error exporting quiz:', error)
+      toast.error('クイズのエクスポートに失敗しました')
     }
   }
 
@@ -128,8 +155,15 @@ export function QuizList() {
               <Button asChild size="sm" className="flex-1">
                 <Link href={`/quiz/${quiz.id}`}>
                   <Play className="h-3 w-3 mr-1" />
-                  クイズ開始
+                  開始
                 </Link>
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => handleExportQuiz(quiz)}
+              >
+                <Download className="h-3 w-3" />
               </Button>
               <Button
                 variant="outline"

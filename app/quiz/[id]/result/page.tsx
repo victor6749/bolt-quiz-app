@@ -8,8 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
-import { Trophy, RotateCcw, Home, CheckCircle, XCircle, BookOpen } from 'lucide-react'
+import { Trophy, RotateCcw, Home, CheckCircle, XCircle, BookOpen, Download } from 'lucide-react'
 import { useQuizStore } from '@/store/quiz'
+import { toast } from 'sonner'
 
 interface PageProps {
   params: { id: string }
@@ -78,6 +79,50 @@ export default function ResultPage({ params }: PageProps) {
     }
   }
 
+  const exportResults = () => {
+    if (!currentQuiz) return
+
+    const resultsData = {
+      quiz: {
+        id: currentQuiz.id,
+        title: currentQuiz.title,
+        description: currentQuiz.description
+      },
+      results: {
+        score,
+        total,
+        percentage,
+        completedAt: new Date().toISOString()
+      },
+      answers: currentQuiz.questions.map((question, index) => {
+        const userAnswer = answers[question.id]
+        const isCorrect = isAnswerCorrect(question, userAnswer)
+        
+        return {
+          questionNumber: index + 1,
+          question: question.question,
+          type: question.type,
+          userAnswer: getAnswerDisplay(question, userAnswer),
+          correctAnswer: getCorrectAnswerDisplay(question),
+          isCorrect,
+          explanation: question.explanation
+        }
+      })
+    }
+
+    const dataStr = JSON.stringify(resultsData, null, 2)
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+    
+    const exportFileDefaultName = `quiz_results_${currentQuiz.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`
+    
+    const linkElement = document.createElement('a')
+    linkElement.setAttribute('href', dataUri)
+    linkElement.setAttribute('download', exportFileDefaultName)
+    linkElement.click()
+    
+    toast.success('結果が正常にエクスポートされました！')
+  }
+
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -113,6 +158,10 @@ export default function ResultPage({ params }: PageProps) {
               <Button onClick={handleRetake} variant="outline" className="flex-1">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 再挑戦
+              </Button>
+              <Button onClick={exportResults} variant="outline" className="flex-1">
+                <Download className="mr-2 h-4 w-4" />
+                結果出力
               </Button>
               <Button asChild className="flex-1">
                 <Link href="/dashboard">

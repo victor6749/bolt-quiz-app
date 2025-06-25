@@ -240,6 +240,21 @@ export const quizSetDb = {
 
 // QuizAttempt operations
 export const quizAttemptDb = {
+  async findMany(where?: { userId?: string; quizSetId?: string }): Promise<QuizAttempt[]> {
+    const attempts = await readJsonFile<QuizAttempt>(QUIZ_ATTEMPTS_FILE)
+    let filtered = attempts
+    
+    if (where?.userId) {
+      filtered = filtered.filter(attempt => attempt.userId === where.userId)
+    }
+    
+    if (where?.quizSetId) {
+      filtered = filtered.filter(attempt => attempt.quizSetId === where.quizSetId)
+    }
+    
+    return filtered
+  },
+
   async create(data: Omit<QuizAttempt, 'id' | 'completedAt'>): Promise<QuizAttempt> {
     const attempts = await readJsonFile<QuizAttempt>(QUIZ_ATTEMPTS_FILE)
     const newAttempt: QuizAttempt = {

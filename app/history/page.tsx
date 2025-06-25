@@ -3,19 +3,24 @@
 import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Calendar, Trophy, Target } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Calendar, Trophy, Target, Eye, Download } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
+import Link from 'next/link'
+import { toast } from 'sonner'
 
 interface QuizAttempt {
   id: string
   score: number
   totalQuestions: number
   completedAt: string
+  answers: string
   quizSet: {
     title: string
     description: string
-  }
+  } | null
+  quizSetId: string
 }
 
 export default function HistoryPage() {
@@ -23,15 +28,64 @@ export default function HistoryPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // This would be implemented with a proper API endpoint
-    // For now, showing the structure
-    setLoading(false)
+    fetchAttempts()
   }, [])
+
+  const fetchAttempts = async () => {
+    try {
+      const response = await fetch('/api/quiz/attempts')
+      if (response.ok) {
+        const data = await response.json()
+        setAttempts(data)
+      } else {
+        throw new Error('履歴の取得に失敗しました')
+      }
+    } catch (error) {
+      console.error('Error fetching attempts:', error)
+      toast.error('履歴の読み込みに失敗しました')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const getScoreColor = (percentage: number) => {
     if (percentage >= 80) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
     if (percentage >= 60) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
+  }
+
+  const exportAttemptResults = (attempt: QuizAttempt) => {
+    try {
+      const answers = JSON.parse(attempt.answers)
+      const resultsData = {
+        quiz: {
+          title: attempt.quizSet?.title || '不明なクイズ',
+          description: attempt.quizSet?.description || ''
+        },
+        results: {
+          score: attempt.score,
+          total: attempt.totalQuestions,
+          percentage: Math.round((attempt.score / attempt.totalQuestions) * 100),
+          completedAt: attempt.completedAt
+        },
+        answers: answers
+      }
+
+      const dataStr = JSON.stringify(resultsData, null, 2)
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
+      
+      const exportFileDefaultName = `quiz_results_${attempt.quizSet?.title?.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'unknown'}_${new Date(attempt.completedAt).toISOString().split('T')[0]}.json`
+      
+      const linkElement = document.createElement('a')
+      linkElement.setAttribute('href', dataUri)
+      linkElement.setAttribute('download', exportFileDefaultName)
+      linkElement.click()
+      
+      toast.success('結果が正常にエクスポートされました！')
+    } catch (error) {
+      console.error('Error exporting results:', error)
+      toast.error('結果のエクスポートに失敗しました')
+    }
   }
 
   if (loading) {
@@ -72,6 +126,11 @@ export default function HistoryPage() {
               <p className="text-sm text-muted-foreground mt-1">
                 最初のクイズに挑戦して、ここで進捗を確認しましょう！
               </p>
+              <Button asChild className="mt-4">
+                <Link href="/dashboard">
+                  クイズを作成する
+                </Link>
+              </Button>
             </CardContent>
           </Card>
         ) : (
@@ -80,12 +139,14 @@ export default function HistoryPage() {
               const percentage = Math.round((attempt.score / attempt.totalQuestions) * 100)
               
               return (
-                <Card key={attempt.id}>
+                <Card key={attempt.id} className="hover:shadow-md transition-shadow">
                   <CardHeader>
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg">{attempt.quizSet.title}</CardTitle>
-                        {attempt.quizSet.description && (
+                      <div className="space-y-1 flex-1">
+                        <CardTitle className="text-lg">
+                          {attempt.quizSet?.title || '削除されたクイズ'}
+                        </CardTitle>
+                        {attempt.quizSet?.description && (
                           <CardDescription>{attempt.quizSet.description}</CardDescription>
                         )}
                       </div>
@@ -95,14 +156,35 @@ export default function HistoryPage() {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
-                        {formatDistanceToNow(new Date(attempt.completedAt), { addSuffix: true, locale: ja })}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-4 w-4" />
+                          {formatDistanceToNow(new Date(attempt.completedAt), { addSuffix: true, locale: ja })}
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Target className="h-4 w-4" />
+                          {attempt.totalQuestions}問
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1">
-                        <Target className="h-4 w-4" />
-                        {attempt.totalQuestions}問
+                      
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => exportAttemptResults(attempt)}
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          結果出力
+                        </Button>
+                        {attempt.quizSet && (
+                          <Button asChild variant="outline" size="sm">
+                            <Link href={`/quiz/${attempt.quizSetId}`}>
+                              <Eye className="h-4 w-4 mr-1" />
+                              再挑戦
+                            </Link>
+                          </Button>
+                        )}
                       </div>
                     </div>
                   </CardContent>
