@@ -8,9 +8,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Separator } from '@/components/ui/separator'
-import { Trophy, RotateCcw, Home, CheckCircle, XCircle, BookOpen, Download } from 'lucide-react'
+import { Trophy, RotateCcw, Home, CheckCircle, XCircle, BookOpen } from 'lucide-react'
 import { useQuizStore } from '@/store/quiz'
-import { toast } from 'sonner'
 
 interface PageProps {
   params: { id: string }
@@ -79,50 +78,6 @@ export default function ResultPage({ params }: PageProps) {
     }
   }
 
-  const exportResults = () => {
-    if (!currentQuiz) return
-
-    const resultsData = {
-      quiz: {
-        id: currentQuiz.id,
-        title: currentQuiz.title,
-        description: currentQuiz.description
-      },
-      results: {
-        score,
-        total,
-        percentage,
-        completedAt: new Date().toISOString()
-      },
-      answers: currentQuiz.questions.map((question, index) => {
-        const userAnswer = answers[question.id]
-        const isCorrect = isAnswerCorrect(question, userAnswer)
-        
-        return {
-          questionNumber: index + 1,
-          question: question.question,
-          type: question.type,
-          userAnswer: getAnswerDisplay(question, userAnswer),
-          correctAnswer: getCorrectAnswerDisplay(question),
-          isCorrect,
-          explanation: question.explanation
-        }
-      })
-    }
-
-    const dataStr = JSON.stringify(resultsData, null, 2)
-    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-    
-    const exportFileDefaultName = `quiz_results_${currentQuiz.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}_${new Date().toISOString().split('T')[0]}.json`
-    
-    const linkElement = document.createElement('a')
-    linkElement.setAttribute('href', dataUri)
-    linkElement.setAttribute('download', exportFileDefaultName)
-    linkElement.click()
-    
-    toast.success('結果が正常にエクスポートされました！')
-  }
-
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="max-w-4xl mx-auto space-y-6">
@@ -158,10 +113,6 @@ export default function ResultPage({ params }: PageProps) {
               <Button onClick={handleRetake} variant="outline" className="flex-1">
                 <RotateCcw className="mr-2 h-4 w-4" />
                 再挑戦
-              </Button>
-              <Button onClick={exportResults} variant="outline" className="flex-1">
-                <Download className="mr-2 h-4 w-4" />
-                結果出力
               </Button>
               <Button asChild className="flex-1">
                 <Link href="/dashboard">
@@ -211,30 +162,31 @@ export default function ResultPage({ params }: PageProps) {
                       </Badge>
                     </div>
                     
-                    <div className="bg-muted/50 p-4 rounded-lg">
-                      <p className="font-medium mb-3">{question.question}</p>
+                    <div className="bg-muted/50 p-4 rounded-lg space-y-4">
+                      <div>
+                        <h4 className="font-medium text-base mb-2">問題</h4>
+                        <p className="text-sm leading-relaxed">{question.question}</p>
+                      </div>
                       
                       <div className="grid gap-3 text-sm">
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">あなたの回答:</span>
-                          <span className={isCorrect ? 'text-green-600 font-medium' : 'text-red-600 font-medium'}>
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                          <span className="text-muted-foreground font-medium">あなたの回答:</span>
+                          <span className={`font-medium ${isCorrect ? 'text-green-600' : 'text-red-600'}`}>
                             {getAnswerDisplay(question, userAnswer)}
                           </span>
                         </div>
                         
-                        {!isCorrect && (
-                          <div className="flex justify-between">
-                            <span className="text-muted-foreground">正解:</span>
-                            <span className="text-green-600 font-medium">
-                              {getCorrectAnswerDisplay(question)}
-                            </span>
-                          </div>
-                        )}
+                        <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                          <span className="text-muted-foreground font-medium">正解:</span>
+                          <span className="text-green-600 font-medium">
+                            {getCorrectAnswerDisplay(question)}
+                          </span>
+                        </div>
                         
                         {question.explanation && (
-                          <div className="pt-2 border-t border-border/50">
-                            <span className="text-muted-foreground text-xs">解説:</span>
-                            <p className="mt-1 text-sm leading-relaxed">
+                          <div className="pt-3 border-t border-border/50">
+                            <h5 className="text-muted-foreground text-sm font-medium mb-2">解説</h5>
+                            <p className="text-sm leading-relaxed bg-background/50 p-3 rounded border-l-4 border-primary/20">
                               {question.explanation}
                             </p>
                           </div>
@@ -243,7 +195,7 @@ export default function ResultPage({ params }: PageProps) {
                     </div>
                     
                     {index < currentQuiz.questions.length - 1 && (
-                      <Separator className="my-4" />
+                      <Separator className="my-6" />
                     )}
                   </div>
                 )

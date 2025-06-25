@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Calendar, Trophy, Target, Eye, Download } from 'lucide-react'
+import { Calendar, Trophy, Target, Eye } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
 import { ja } from 'date-fns/locale'
 import Link from 'next/link'
@@ -52,40 +52,6 @@ export default function HistoryPage() {
     if (percentage >= 80) return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
     if (percentage >= 60) return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300'
     return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-  }
-
-  const exportAttemptResults = (attempt: QuizAttempt) => {
-    try {
-      const answers = JSON.parse(attempt.answers)
-      const resultsData = {
-        quiz: {
-          title: attempt.quizSet?.title || '不明なクイズ',
-          description: attempt.quizSet?.description || ''
-        },
-        results: {
-          score: attempt.score,
-          total: attempt.totalQuestions,
-          percentage: Math.round((attempt.score / attempt.totalQuestions) * 100),
-          completedAt: attempt.completedAt
-        },
-        answers: answers
-      }
-
-      const dataStr = JSON.stringify(resultsData, null, 2)
-      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr)
-      
-      const exportFileDefaultName = `quiz_results_${attempt.quizSet?.title?.replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'unknown'}_${new Date(attempt.completedAt).toISOString().split('T')[0]}.json`
-      
-      const linkElement = document.createElement('a')
-      linkElement.setAttribute('href', dataUri)
-      linkElement.setAttribute('download', exportFileDefaultName)
-      linkElement.click()
-      
-      toast.success('結果が正常にエクスポートされました！')
-    } catch (error) {
-      console.error('Error exporting results:', error)
-      toast.error('結果のエクスポートに失敗しました')
-    }
   }
 
   if (loading) {
@@ -169,14 +135,6 @@ export default function HistoryPage() {
                       </div>
                       
                       <div className="flex gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => exportAttemptResults(attempt)}
-                        >
-                          <Download className="h-4 w-4 mr-1" />
-                          結果出力
-                        </Button>
                         {attempt.quizSet && (
                           <Button asChild variant="outline" size="sm">
                             <Link href={`/quiz/${attempt.quizSetId}`}>
